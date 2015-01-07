@@ -17,7 +17,10 @@
 
 package com.rondhuit.w2v.demo;
 
+import java.io.File;
 import java.io.IOException;
+
+import org.apache.lucene.store.FSDirectory;
 
 import com.rondhuit.w2v.Word2vec;
 import com.rondhuit.w2v.lucene.LuceneIndexConfig;
@@ -26,28 +29,38 @@ import com.rondhuit.w2v.lucene.LuceneIndexCorpusFactory;
 public class LuceneCreateVectors extends AbstractCreateVectors {
 
   @Override
-  protected void localUsage(){
+  protected void localUsage() {
     paramDesc("-index <dir>", "Set Lucene index <dir> to train the model");
-    paramDesc("-analyzer <Lucene Analyzer class>", "Set Lucene Analyzer class name; default is org.apache.lucene.analysis.core.WhitespaceAnalyzer");
+    paramDesc(
+        "-analyzer <Lucene Analyzer class>",
+        "Set Lucene Analyzer class name; default is org.apache.lucene.analysis.core.WhitespaceAnalyzer");
     paramDesc("-field <field name>", "Set Lucene field name to be analyzed");
     System.err.printf("\nExamples:\n");
-    System.err.printf("java %s -index index -output vec.txt -size 200 -window 5 -sample 0.0001 -negative 5 -hs 0 -binary -cbow -iter 3\n\n",
-        LuceneCreateVectors.class.getName());
+    System.err
+        .printf(
+            "java %s -index index -output vec.txt -size 200 -window 5 -sample 0.0001 -negative 5 -hs 0 -binary -cbow -iter 3\n\n",
+            LuceneCreateVectors.class.getName());
   }
-  
+
   void execute(String[] args) throws IOException {
-    if(args.length <= 1) usage();
-    
+    if (args.length <= 1)
+      usage();
+
     LuceneIndexConfig config = new LuceneIndexConfig();
 
     setConfig(args, config);
     int i;
-    if((i = argPos("-index", args)) >= 0) config.setIndexDir(args[i + 1]);
-    if((i = argPos("-analyzer", args)) >= 0) config.setAnalyzer(args[i + 1]);
-    if((i = argPos("-field", args)) >= 0) config.setField(args[i + 1]);
-    
+    if ((i = argPos("-index", args)) >= 0) {
+      config.setIndexDir(FSDirectory.open(new File(args[i + 1])));
+    }
+    if ((i = argPos("-analyzer", args)) >= 0)
+      config.setAnalyzer(args[i + 1]);
+    if ((i = argPos("-field", args)) >= 0)
+      config.setField(args[i + 1]);
+
     Word2vec w2v = new Word2vec(config);
-    System.err.printf("Starting training using Lucene index %s\n", config.getIndexDir());
+    System.err.printf("Starting training using Lucene index %s\n",
+        config.getIndexDir());
     w2v.trainModel(new LuceneIndexCorpusFactory());
   }
 

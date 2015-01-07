@@ -19,80 +19,148 @@ package com.rondhuit.w2v;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.Serializable;
+import java.io.Writer;
 import java.nio.charset.Charset;
 
 import com.rondhuit.commons.IOUtils;
 
-public final class VectorsReader {
+public final class VectorsReader implements Serializable {
 
+  /**
+	 * 
+	 */
+  private static final long serialVersionUID = -2210836393040436364L;
   public final Charset ENCODING = Charset.forName("UTF-8");
   private int words, size;
   private String[] vocab;
   private float[][] matrix;
   private final String file;
 
-  public VectorsReader(String file){
+  public VectorsReader(String file) {
     this.file = file;
   }
-  
+
+  public VectorsReader(int layer1Size, int vocabSize, VocabWord[] _vocab,
+      double[] syn0) {
+    this(null);
+
+    words = vocabSize;
+    size = layer1Size;
+
+    vocab = new String[words];
+    matrix = new float[words][];
+
+    for (int i = 0; i < words; i++) {
+      vocab[i] = _vocab[i].word;
+      matrix[i] = new float[size];
+      double len = 0;
+      for (int j = 0; j < size; j++) {
+        matrix[i][j] = (float) syn0[i * layer1Size + j];
+        len += matrix[i][j] * matrix[i][j];
+      }
+      len = Math.sqrt(len);
+      for (int j = 0; j < size; j++) {
+        matrix[i][j] /= len;
+      }
+    }
+
+  }
+
+  public boolean writeVectorFile(String file) {
+
+    OutputStream os = null;
+    Writer w = null;
+    PrintWriter pw = null;
+
+    try {
+      os = new FileOutputStream(file);
+      w = new OutputStreamWriter(os, ENCODING);
+      pw = new PrintWriter(w);
+
+      // Save the word vectors
+      pw.printf("%d %d\n", words, size);
+      for (int i = 0; i < words; i++) {
+        pw.print(vocab[i]);
+        for (int j = 0; j < size; j++) {
+          pw.printf(" %f", matrix[i][j]);
+        }
+        pw.println();
+      }
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+      return false;
+    } finally {
+      IOUtils.closeQuietly(pw);
+      IOUtils.closeQuietly(w);
+      IOUtils.closeQuietly(os);
+    }
+
+    return true;
+  }
+
   public void readVectorFile() throws IOException {
     System.err.printf("reading %s file. please wait...\n", file);
-    
+
     InputStream is = null;
     Reader r = null;
     BufferedReader br = null;
-    try{
+    try {
       is = new FileInputStream(file);
       r = new InputStreamReader(is, ENCODING);
       br = new BufferedReader(r);
-      
+
       String line = br.readLine();
       words = Integer.parseInt(line.split("\\s+")[0].trim());
       size = Integer.parseInt(line.split("\\s+")[1].trim());
-      
+
       vocab = new String[words];
       matrix = new float[words][];
 
-      for(int i = 0; i < words; i++){
+      for (int i = 0; i < words; i++) {
         line = br.readLine().trim();
         String[] params = line.split("\\s+");
         vocab[i] = params[0];
         matrix[i] = new float[size];
         double len = 0;
-        for(int j = 0; j < size; j++){
+        for (int j = 0; j < size; j++) {
           matrix[i][j] = Float.parseFloat(params[j + 1]);
           len += matrix[i][j] * matrix[i][j];
         }
         len = Math.sqrt(len);
-        for(int j = 0; j < size; j++){
+        for (int j = 0; j < size; j++) {
           matrix[i][j] /= len;
         }
       }
-    }
-    catch(IOException e){
+    } catch (IOException e) {
       IOUtils.closeQuietly(br);
       IOUtils.closeQuietly(r);
       IOUtils.closeQuietly(is);
     }
   }
-  
-  public int getSize(){
+
+  public int getSize() {
     return size;
   }
-  
-  public int getNumWords(){
+
+  public int getNumWords() {
     return words;
   }
-  
-  public String getWord(int idx){
+
+  public String getWord(int idx) {
     return vocab[idx];
   }
-  
-  public float getMatrixElement(int row, int column){
+
+  public float getMatrixElement(int row, int column) {
     return matrix[row][column];
   }
 }

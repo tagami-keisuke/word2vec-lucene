@@ -17,20 +17,24 @@
 
 package com.rondhuit.w2v.lucene;
 
+import org.apache.lucene.store.Directory;
+
 import com.rondhuit.w2v.Config;
 
 public class LuceneIndexConfig extends Config {
 
   static final String DEF_ANALYZER     = "org.apache.lucene.analysis.standard.StandardAnalyzer";
   
-  private String indexDir, field, analyzer = DEF_ANALYZER;
+  private String analyzer = DEF_ANALYZER;
+  private String field;
+  private Directory indexDir = null;
 
-  public LuceneIndexConfig setIndexDir(String indexDir){
+  public LuceneIndexConfig setIndexDir(Directory indexDir){
     this.indexDir = indexDir;
     return this;
   }
   
-  public String getIndexDir(){
+  public Directory getIndexDir(){
     return indexDir;
   }
 

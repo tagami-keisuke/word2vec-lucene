@@ -19,12 +19,14 @@ package com.rondhuit.w2v.lucene;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.Fields;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.index.Terms;
@@ -51,18 +53,18 @@ public class LuceneIndexCorpus extends Corpus {
   public LuceneIndexCorpus(Config config) throws IOException {
     super(config);
 
-    LuceneIndexConfig liConfig = (LuceneIndexConfig)config;
+    LuceneIndexConfig liConfig = (LuceneIndexConfig) config;
     field = liConfig.getField();
     analyzer = loadAnalyzer(liConfig.getAnalyzer());
-    Directory dir = FSDirectory.open(new File(liConfig.getIndexDir()));
+    // Directory dir = FSDirectory.open(new File(liConfig.getIndexDir()));
+    Directory dir = liConfig.getIndexDir();
     reader = DirectoryReader.open(dir);
   }
 
-  static Analyzer loadAnalyzer(String fqcn){
+  static Analyzer loadAnalyzer(String fqcn) {
     try {
-      return (Analyzer)Class.forName(fqcn).newInstance();
-    }
-    catch (Exception e) {
+      return (Analyzer) Class.forName(fqcn).newInstance();
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
@@ -70,20 +72,22 @@ public class LuceneIndexCorpus extends Corpus {
   public LuceneIndexCorpus(Corpus cloneSrc) throws IOException {
     super(cloneSrc);
 
-    LuceneIndexCorpus lic = (LuceneIndexCorpus)cloneSrc;
+    LuceneIndexCorpus lic = (LuceneIndexCorpus) cloneSrc;
 
     config = lic.config;
     reader = lic.reader;
     field = lic.field;
     topDocs = lic.topDocs;
-    analyzer = loadAnalyzer(((LuceneIndexConfig)config).getAnalyzer());
+    analyzer = loadAnalyzer(((LuceneIndexConfig) config).getAnalyzer());
   }
 
   @Override
   public void learnVocab() throws IOException {
     super.learnVocab();
+    enumrateVocab(((LuceneIndexConfig) config).getField());
+  }
 
-    final String field = ((LuceneIndexConfig)config).getField();
+  private void enumrateVocab(String field) throws IOException {
     final Terms terms = MultiFields.getTerms(reader, field);
     final BytesRef maxTerm = terms.getMax();
     final BytesRef minTerm = terms.getMin();
@@ -96,16 +100,16 @@ public class LuceneIndexCorpus extends Corpus {
 
     termsEnum.seekCeil(new BytesRef());
     BytesRef term = termsEnum.term();
-    while(term != null){
+    while (term != null) {
       int p = addWordToVocab(term.utf8ToString());
-      vocab[p].setCn((int)termsEnum.totalTermFreq());
+      vocab[p].setCn((int) termsEnum.totalTermFreq());
       term = termsEnum.next();
     }
   }
 
   TokenStream tokenStream = null;
   CharTermAttribute termAtt = null;
-  String[] values = new String[]{};
+  String[] values = new String[] {};
   int valPos = 0;
 
   @Override
@@ -116,31 +120,32 @@ public class LuceneIndexCorpus extends Corpus {
 
   @Override
   public String nextWord() throws IOException {
-    
-    while(true){
+
+    while (true) {
       // check the tokenStream first
-      if(tokenStream != null && tokenStream.incrementToken()){
+      if (tokenStream != null && tokenStream.incrementToken()) {
         return new String(termAtt.buffer(), 0, termAtt.length());
       }
 
-      if(tokenStream != null)
+      if (tokenStream != null)
         tokenStream.close();
-      if(valPos < values.length){
+      if (valPos < values.length) {
         tokenStream = analyzer.tokenStream(field, values[valPos++]);
         termAtt = tokenStream.getAttribute(CharTermAttribute.class);
         tokenStream.reset();
         eoc = false;
         return null;
-      }
-      else{
-        if(tdPos >= topDocs.totalHits){
+      } else {
+        if (tdPos >= topDocs.totalHits) {
           tokenStream = null;
           eoc = true;
-          return null;   // end of index == end of corpus
+          return null; // end of index == end of corpus
         }
         Document doc = reader.document(topDocs.scoreDocs[tdPos++].doc);
-        values = doc.getValues(field);   // This method returns an empty array when there are no matching fields.
-                                         // It never returns null.
+        values = doc.getValues(field); // This method returns an empty
+        // array when there are no
+        // matching fields.
+        // It never returns null.
         valPos = 0;
         tokenStream = null;
       }
