@@ -17,19 +17,17 @@
 
 package com.rondhuit.w2v;
 
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Writer;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
 import java.util.Comparator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rondhuit.commons.IOUtils;
 
 public class Word2vec {
 
@@ -44,7 +42,7 @@ public class Word2vec {
   int[] table;
 
   private final Config config;
-  private VectorsReader vectorsReader = null;
+  private WordVectors vectorsReader = null;
 
   static final double[] expTable = new double[EXP_TABLE_SIZE + 1];
 
@@ -374,7 +372,7 @@ public class Word2vec {
 
   int threadCount;
 
-  public VectorsReader trainModel(CorpusFactory corpusFactory)
+  public WordVectors trainModel(CorpusFactory corpusFactory)
       throws IOException {
     final int layer1Size = config.getLayer1Size();
     Corpus corpus = corpusFactory.create(config);
@@ -406,23 +404,47 @@ public class Word2vec {
       }
     }
 
-    vectorsReader = new VectorsReader(layer1Size, vocabSize, vocab, syn0);
+    vectorsReader = new WordVectors(layer1Size, vocabSize, vocab, syn0);
     corpus.close();
     return vectorsReader;
   }
 
-  public boolean writeFile() {
-
-    if (config.getOutputFile() == null)
-      return false;
+  public boolean writeModel(String file) {
 
     if (null == vectorsReader) {
       return false;
     }
+    
+    ObjectOutputStream oos;
+    try {
+        oos = new ObjectOutputStream(new FileOutputStream(file));
+        oos.writeObject(vectorsReader);
+        oos.close();
+    } catch (IOException e1) {
+        // TODO Auto-generated catch block
+        e1.printStackTrace();
+        return false;
+    }
 
-    logger.info("now saving the word vectors to the file {}",
-        config.getOutputFile());
-    return vectorsReader.writeVectorFile(config.getOutputFile());
+    //  return vectorsReader.writeVectorFile(config.getOutputFile());
+    return true;
+  }
+    
+  @SuppressWarnings("resource")
+  static public WordVectors readModel(String file) {
+
+    ObjectInputStream ois;
+    try {
+        ois = new ObjectInputStream(new FileInputStream(file));
+            return (WordVectors)ois.readObject();
+    } catch (IOException e) {
+        e.printStackTrace();
+        return null;
+    } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+        return null;
+    }
+
   }
 
   /**

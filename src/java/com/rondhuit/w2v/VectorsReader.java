@@ -28,19 +28,14 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.io.Serializable;
 import java.io.Writer;
 import java.nio.charset.Charset;
 
 import com.rondhuit.commons.IOUtils;
 
-public final class VectorsReader implements Serializable {
+public final class VectorsReader {
 
-  /**
-	 * 
-	 */
-  private static final long serialVersionUID = -2210836393040436364L;
-  public final Charset ENCODING = Charset.forName("UTF-8");
+  public transient final Charset ENCODING = Charset.forName("UTF-8");
   private int words, size;
   private String[] vocab;
   private float[][] matrix;
@@ -48,32 +43,6 @@ public final class VectorsReader implements Serializable {
 
   public VectorsReader(String file) {
     this.file = file;
-  }
-
-  public VectorsReader(int layer1Size, int vocabSize, VocabWord[] _vocab,
-      double[] syn0) {
-    this(null);
-
-    words = vocabSize;
-    size = layer1Size;
-
-    vocab = new String[words];
-    matrix = new float[words][];
-
-    for (int i = 0; i < words; i++) {
-      vocab[i] = _vocab[i].word;
-      matrix[i] = new float[size];
-      double len = 0;
-      for (int j = 0; j < size; j++) {
-        matrix[i][j] = (float) syn0[i * layer1Size + j];
-        len += matrix[i][j] * matrix[i][j];
-      }
-      len = Math.sqrt(len);
-      for (int j = 0; j < size; j++) {
-        matrix[i][j] /= len;
-      }
-    }
-
   }
 
   public boolean writeVectorFile(String file) {
@@ -163,4 +132,7 @@ public final class VectorsReader implements Serializable {
   public float getMatrixElement(int row, int column) {
     return matrix[row][column];
   }
+  
+  
+  
 }
