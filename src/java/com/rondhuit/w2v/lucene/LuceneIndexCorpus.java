@@ -84,7 +84,8 @@ public class LuceneIndexCorpus extends Corpus {
   @Override
   public void learnVocab() throws IOException {
     super.learnVocab();
-    enumrateVocab(((LuceneIndexConfig) config).getField());
+    String targetField = ((LuceneIndexConfig) config).getField();
+    enumrateVocab(targetField);
   }
 
   private void enumrateVocab(String field) throws IOException {

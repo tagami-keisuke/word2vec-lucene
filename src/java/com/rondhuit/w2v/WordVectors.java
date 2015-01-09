@@ -95,7 +95,7 @@ public class WordVectors implements Serializable {
         return new Word(input, vec, new int[]{bi});
     }
 
-    public SortedSet<Map.Entry<Double,Word>>  search(Word word) {
+    public SortedSet<Map.Entry<Double,Word>> search(Word word) {
         
         SortedSet<Map.Entry<Double,Word>> sortedset = new TreeSet<Map.Entry<Double, Word>>(
                 new Comparator<Map.Entry<Double, Word>>() {
@@ -116,7 +116,7 @@ public class WordVectors implements Serializable {
                 dist += word.vec[j] * getMatrixElement(i, j);
             }
             
-            Word w = new Word(vocab[i], matrix[i], new int[]{});
+            Word w = new Word(vocab[i], matrix[i], null);
             SimpleEntry<Double, Word> e = new AbstractMap.SimpleEntry<Double, Word>(dist, w);
             sortedset.add(e);
         }
