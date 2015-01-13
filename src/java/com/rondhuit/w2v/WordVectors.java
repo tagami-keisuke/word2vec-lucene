@@ -108,7 +108,7 @@ public class WordVectors implements Serializable {
         
         for (int i = 0; i < words; i++) {
             if( word.contains(i)) {
-                break;
+                continue;
             }
             
             double dist = 0;
