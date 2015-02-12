@@ -31,7 +31,7 @@
 
     <target name="w2vl-compile" description="compile w2vl">
         <mkdir dir="${cls.dir}"/>
-        <javac srcdir="${src.dir}/java"
+        <javac srcdir="${src.dir}/main/java"
                destdir="${cls.dir}"
                encoding="${compile.encoding}"
                deprecation="${compile.deprecation}"
@@ -51,7 +51,7 @@
         </copy>
         <javadoc
           overview="src/java/overview.html"
-          sourcepath="${src.dir}/java"
+          sourcepath="${src.dir}/main/java"
           packagenames="com.rondhuit.w2v.*"
           failonerror="true"
           destdir="${javadoc.dir}"
@@ -148,7 +148,7 @@
         </string>
       </concat>
     </target>
-    
+
     <target name="t8xml-check" depends="t8-splitter">
         <available file="text8.xml" property="t8xml.exists"/>
     </target>
@@ -162,7 +162,7 @@
             <classpath path="${cls.dir}"/>
         </java>
     </target>
-    
+
     <target name="t8txt-check" depends="t8-unzip">
         <available file="text8.txt" property="t8txt.exists"/>
     </target>
@@ -170,7 +170,7 @@
     <target name="t8-unzip" unless="t8.exists" depends="t8-check">
         <unzip src="text8.zip" dest="."/>
     </target>
-    
+
     <target name="t8-check" depends="t8-download">
         <available file="text8" property="t8.exists"/>
     </target>
@@ -179,7 +179,7 @@
         description="download text8.zip file if it doesn't exist">
         <get src="http://mattmahoney.net/dc/text8.zip" dest="text8.zip"/>
     </target>
-    
+
     <target name="t8zip-check">
         <available file="text8.zip" property="t8zip.exists"/>
     </target>
@@ -189,7 +189,7 @@
         <delete file="text8"/>
         <delete file="text8.txt"/>
     </target>
-    
+
     <!-- ================================================================== -->
     <!-- = PACKAGE                                                        = -->
     <!-- ================================================================== -->

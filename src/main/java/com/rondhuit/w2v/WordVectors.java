@@ -1,7 +1,5 @@
 package com.rondhuit.w2v;
 
-import static org.junit.Assert.fail;
-
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.AbstractMap;
